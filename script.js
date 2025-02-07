@@ -1,6 +1,8 @@
-document.addEventListener("DOMContentLoaded", function() {
-    if (typeof concepts === 'undefined') {
+document.addEventListener("DOMContentLoaded", function () {
+    if (typeof concepts === "undefined") {
         console.error("⚠️ concepts 변수가 정의되지 않았습니다. concepts.js를 확인하세요.");
+        alert("❌ 데이터 로드 실패: concepts.js 파일이 없거나 올바르게 로드되지 않았습니다.");
+        fetchConcepts(); // concepts.js가 없을 경우 동적으로 불러옴
         return;
     }
     console.log("✅ JSON 데이터 로드 성공:", concepts);
@@ -8,6 +10,28 @@ document.addEventListener("DOMContentLoaded", function() {
     loadBookmarks();
     loadCompletedConcepts();
 });
+
+// 🔄 동적으로 concepts.js 불러오기
+function fetchConcepts() {
+    fetch("concepts.js")
+        .then((response) => {
+            if (!response.ok) throw new Error("concepts.js를 찾을 수 없습니다.");
+            return response.text();
+        })
+        .then((data) => {
+            eval(data); // 주의: eval() 사용은 보안 취약점을 유발할 수 있으므로 신뢰할 수 있는 환경에서만 사용
+            if (typeof concepts !== "undefined") {
+                console.log("✅ 동적 로드 성공:", concepts);
+                displayConcepts(concepts);
+            } else {
+                throw new Error("concepts 변수가 여전히 정의되지 않음");
+            }
+        })
+        .catch((error) => {
+            console.error("❌ concepts.js 로드 실패:", error);
+            alert("❌ 개념 데이터를 불러오지 못했습니다. 페이지를 새로고침하거나 관리자에게 문의하세요.");
+        });
+}
 
 // 개념 목록을 카드 형태로 표시하는 함수
 function displayConcepts(conceptList) {
@@ -39,11 +63,17 @@ function displayConcepts(conceptList) {
     });
 }
 
-// 검색 기능
+// 검색 기능 (concepts 변수가 undefined일 경우 예외 처리 추가)
 function searchConcepts() {
+    if (typeof concepts === "undefined") {
+        console.error("⚠️ 검색 기능 비활성화: concepts.js가 로드되지 않음");
+        alert("❌ 검색 기능을 사용할 수 없습니다. 개념 데이터를 먼저 로드하세요.");
+        return;
+    }
+
     const searchTerm = document.getElementById("searchBox").value.toLowerCase();
-    const filteredConcepts = concepts.filter(concept => 
-        concept.title.toLowerCase().includes(searchTerm) || 
+    const filteredConcepts = concepts.filter((concept) =>
+        concept.title.toLowerCase().includes(searchTerm) ||
         concept.description.toLowerCase().includes(searchTerm)
     );
     displayConcepts(filteredConcepts);
@@ -51,7 +81,7 @@ function searchConcepts() {
 
 // 퀴즈 기능
 function startQuiz() {
-    if (typeof concepts === 'undefined' || concepts.length === 0) {
+    if (typeof concepts === "undefined" || concepts.length === 0) {
         alert("⚠️ 개념 데이터가 없습니다.");
         return;
     }
@@ -70,7 +100,7 @@ function startQuiz() {
 function toggleBookmark(title) {
     let bookmarks = JSON.parse(localStorage.getItem("bookmarks")) || [];
     if (bookmarks.includes(title)) {
-        bookmarks = bookmarks.filter(item => item !== title);
+        bookmarks = bookmarks.filter((item) => item !== title);
     } else {
         bookmarks.push(title);
     }
@@ -78,7 +108,7 @@ function toggleBookmark(title) {
     alert(`\"${title}\" ${bookmarks.includes(title) ? "즐겨찾기 추가됨" : "즐겨찾기 제거됨"}`);
 }
 
-// 학습 완료 체크
+// 학습 완료 체크 (UI 업데이트 추가)
 function markAsRead(title) {
     let completedConcepts = JSON.parse(localStorage.getItem("completed")) || [];
     if (!completedConcepts.includes(title)) {
@@ -86,6 +116,11 @@ function markAsRead(title) {
     }
     localStorage.setItem("completed", JSON.stringify(completedConcepts));
     document.querySelector(`[data-title='${title}']`).classList.add("text-muted");
+
+    // ✅ 학습 완료한 항목의 버튼을 비활성화하여 UI 업데이트
+    document.querySelectorAll(`[data-title='${title}'] button`).forEach((btn) => {
+        btn.disabled = true;
+    });
 }
 
 // 즐겨찾기 개념 불러오기
