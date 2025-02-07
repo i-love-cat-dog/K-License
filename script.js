@@ -152,7 +152,7 @@ function toggleReview(title) {
         reviewConcepts.add(title);
     }
     saveToLocalStorage("reviewConcepts", reviewConcepts);
-    displayConcepts(concepts, "review");
+    displayConcepts([...concepts], "review");
 }
 
 // 📌 약한 개념 저장 (중복 추가 방지)
