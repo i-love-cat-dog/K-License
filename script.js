@@ -1,4 +1,8 @@
 document.addEventListener("DOMContentLoaded", function() {
+    if (typeof concepts === 'undefined') {
+        console.error("⚠️ concepts 변수가 정의되지 않았습니다. concepts.js를 확인하세요.");
+        return;
+    }
     console.log("✅ JSON 데이터 로드 성공:", concepts);
     displayConcepts(concepts);
     loadBookmarks();
@@ -47,6 +51,10 @@ function searchConcepts() {
 
 // 퀴즈 기능
 function startQuiz() {
+    if (typeof concepts === 'undefined' || concepts.length === 0) {
+        alert("⚠️ 개념 데이터가 없습니다.");
+        return;
+    }
     const randomConcept = concepts[Math.floor(Math.random() * concepts.length)];
     const questionText = `다음 개념의 정의는 무엇인가요?\n\"${randomConcept.description}\"`;
     const userAnswer = prompt(questionText);
