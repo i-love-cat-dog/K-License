@@ -3,21 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>정보처리기사 필기 개념 정리</title>
+    <title>정보처리기사 개념 정리</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <!-- 네비게이션 바 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow">
         <div class="container">
-            <a class="navbar-brand" href="#">정보처리기사 필기 개념 정리</a>
-            <input type="text" id="searchBox" class="form-control ms-3" placeholder="검색..." onkeyup="searchConcepts()">
+            <a class="navbar-brand fw-bold" href="#">📚 정보처리기사 개념</a>
         </div>
     </nav>
 
-    <div class="container mt-4">
-        <h2 class="text-center fw-bold">📚 정보처리기사 개념 정리</h2>
-        <div id="concepts-list" class="row mt-4">
+    <!-- 검색 섹션 -->
+    <div class="container mt-5 text-center">
+        <h1 class="fw-bold text-dark-emphasis">필기 개념 정리</h1>
+        <p class="text-muted">필기 시험 대비를 위한 핵심 개념을 정리해보세요.</p>
+        <div class="d-flex justify-content-center mt-4">
+            <input type="text" id="searchBox" class="form-control form-control-lg w-50" 
+                   placeholder="검색어를 입력하세요...">
+            <button class="btn btn-primary btn-lg ms-3 px-4 rounded-pill" onclick="searchConcepts()">🔍 검색</button>
+        </div>
+    </div>
+
+    <!-- 개념 카드 리스트 -->
+    <div class="container mt-5">
+        <div id="concepts-list" class="row row-cols-1 row-cols-md-3 g-4">
             <!-- 개념 카드가 여기에 추가됨 -->
         </div>
     </div>
