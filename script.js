@@ -1,11 +1,17 @@
 let concepts = [];
 
-// JSON 데이터 불러오기
-fetch("concepts.json")
-    .then(response => response.json())
+// JSON 데이터 불러오기 (절대 경로로 변경)
+fetch("https://i-love-cat-dog.github.io/K-License/concepts.json") 
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP 오류! 상태 코드: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
         concepts = data;
-        displayConcepts(concepts); // 모든 개념 초기 표시
+        console.log("JSON 데이터 로드 성공:", concepts); // 디버깅용 로그
+        displayConcepts(concepts); // 데이터 로드 후 개념 표시
     })
     .catch(error => console.error("JSON 데이터 로드 오류:", error));
 
@@ -13,6 +19,11 @@ fetch("concepts.json")
 function displayConcepts(conceptList) {
     const conceptsList = document.getElementById("concepts-list");
     conceptsList.innerHTML = ""; // 기존 목록 초기화
+
+    if (conceptList.length === 0) {
+        conceptsList.innerHTML = `<p class="text-center text-danger">검색 결과가 없습니다.</p>`;
+        return;
+    }
 
     conceptList.forEach((concept) => {
         const card = document.createElement("div");
@@ -31,11 +42,15 @@ function displayConcepts(conceptList) {
     });
 }
 
-// 검색 기능 구현
+// 검색 기능 구현 (데이터가 로드되었는지 확인)
 function searchConcepts() {
-    const searchTerm = document.getElementById("searchBox").value.toLowerCase();
+    if (concepts.length === 0) {
+        console.warn("경고: JSON 데이터가 아직 로드되지 않았습니다.");
+        alert("데이터가 아직 로드되지 않았습니다. 잠시 후 다시 검색해 주세요.");
+        return;
+    }
 
-    // 검색어와 일치하는 개념 필터링
+    const searchTerm = document.getElementById("searchBox").value.toLowerCase();
     const filteredConcepts = concepts.filter(concept => 
         concept.title.toLowerCase().includes(searchTerm) || 
         concept.description.toLowerCase().includes(searchTerm)
