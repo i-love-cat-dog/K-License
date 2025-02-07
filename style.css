@@ -8,9 +8,25 @@ body {
 
 .container {
     max-width: 900px;
-    margin: auto;
 }
 
 .card {
-    margin-bottom: 20px;
+    transition: all 0.3s ease-in-out;
+}
+
+.card:hover {
+    transform: scale(1.03);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.text-danger {
+    background-color: yellow;
+    padding: 2px;
+    border-radius: 3px;
+}
+
+.text-primary {
+    background-color: lightblue;
+    padding: 2px;
+    border-radius: 3px;
 }
