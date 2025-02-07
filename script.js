@@ -1,75 +1,158 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>정보처리기사 개념 정리</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <!-- 네비게이션 바 -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="#">📚 정보처리기사 개념</a>
-        </div>
-    </nav>
+document.addEventListener("DOMContentLoaded", function () {
+    if (typeof concepts === "undefined") {
+        console.error("⚠️ concepts 변수가 정의되지 않았습니다. concepts.js를 확인하세요.");
+        alert("❌ 데이터 로드 실패: concepts.js 파일이 없거나 올바르게 로드되지 않았습니다.");
+        fetchConcepts(); // concepts.js가 없을 경우 동적으로 불러옴
+        return;
+    }
+    console.log("✅ JSON 데이터 로드 성공:", concepts);
 
-    <!-- 검색 & 필터 섹션 -->
-    <div class="container mt-5 text-center">
-        <h1 class="fw-bold text-dark-emphasis">필기 개념 정리</h1>
-        <p class="text-muted">필기 시험 대비를 위한 핵심 개념을 정리해보세요.</p>
+    loadWeakConcepts();
+    loadReviewConcepts();
+    loadCompletedConcepts();
+    displayConcepts(concepts, "all");
+});
 
-        <!-- 검색창 -->
-        <div class="d-flex justify-content-center mt-4">
-            <input type="text" id="searchBox" class="form-control form-control-lg w-50"
-                   placeholder="검색어를 입력하세요..." onkeypress="handleSearchEnter(event)">
-            <button class="btn btn-primary btn-lg ms-3 px-4 rounded-pill" onclick="searchConcepts()">🔍 검색</button>
-        </div>
+// ✅ Enter 키로 검색 기능 실행
+function handleSearchEnter(event) {
+    if (event.key === "Enter") {
+        searchConcepts();
+    }
+}
 
-        <!-- 필터 버튼 -->
-        <div class="btn-group mt-3" role="group">
-            <button class="btn btn-outline-secondary" onclick="displayConcepts(concepts, 'all')">📖 전체 보기</button>
-            <button class="btn btn-outline-warning" onclick="displayConcepts(concepts, 'weak')">⚠️ 약한 개념</button>
-            <button class="btn btn-outline-info" onclick="displayConcepts(concepts, 'review')">🔄 복습 개념</button>
-        </div>
+// ✅ Enter 키로 퀴즈 정답 확인 실행
+function handleQuizEnter(event) {
+    if (event.key === "Enter") {
+        checkQuizAnswer();
+    }
+}
 
-        <!-- 퀴즈 시작 버튼 -->
-        <div class="mt-4">
-            <button class="btn btn-warning btn-lg rounded-pill" onclick="startQuiz()">🧠 퀴즈 시작!</button>
-        </div>
-    </div>
+// ✅ 개념 목록을 카드 형태로 표시하는 함수 (필터링 기능 추가)
+function displayConcepts(conceptList, filter = "all") {
+    const conceptsList = document.getElementById("concepts-list");
+    conceptsList.innerHTML = "";
 
-    <!-- 개념 카드 리스트 -->
-    <div class="container mt-5">
-        <div id="concepts-list" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-            <!-- 개념 카드가 여기에 추가됨 -->
-        </div>
-    </div>
+    let filteredConcepts = conceptList;
+    if (filter === "weak") {
+        filteredConcepts = conceptList.filter(c => weakConcepts.includes(c.title));
+    } else if (filter === "review") {
+        filteredConcepts = conceptList.filter(c => reviewConcepts.includes(c.title));
+    }
 
-    <!-- 퀴즈 모달 -->
-    <div class="modal fade" id="quizModal" tabindex="-1" aria-labelledby="quizModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="quizModalLabel">🧠 퀴즈 문제</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p id="quizQuestion"></p>
-                    <input type="text" id="quizAnswer" class="form-control" placeholder="정답을 입력하세요"
-                           onkeypress="handleQuizEnter(event)">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-success" onclick="checkQuizAnswer()">✅ 정답 확인</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+    if (filteredConcepts.length === 0) {
+        conceptsList.innerHTML = `<p class="text-center text-danger">해당 목록에 개념이 없습니다.</p>`;
+        return;
+    }
+
+    filteredConcepts.forEach((concept) => {
+        const isCompleted = completedConcepts.includes(concept.title);
+        const card = document.createElement("div");
+        card.classList.add("col");
+        card.dataset.title = concept.title;
+
+        card.innerHTML = `
+            <div class="card border-0 shadow-sm rounded-4 h-100 ${isCompleted ? "text-muted" : ""}">
+                <div class="card-body p-4">
+                    <span class="badge bg-info mb-2">${concept.category || "기타"}</span>
+                    <h5 class="card-title fw-bold text-primary">${concept.title}</h5>
+                    <p class="card-text text-muted">${concept.description}</p>
+                    <div class="d-flex justify-content-between">
+                        <button class="btn btn-outline-primary btn-sm" onclick="toggleReview('${concept.title}')">🔄 복습 추가</button>
+                        <input type="checkbox" class="form-check-input" id="check-${concept.title}" ${isCompleted ? "checked" : ""} onchange="markAsRead('${concept.title}')">
+                        <label for="check-${concept.title}">✅ 학습 완료</label>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
+        `;
+        conceptsList.appendChild(card);
+    });
+}
 
-    <script src="concepts.js"></script>
-    <script src="script.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+// ✅ 필터링 기능 (버튼 클릭 시 실행)
+function filterConcepts(filter) {
+    displayConcepts(concepts, filter);
+}
+
+// 📌 퀴즈 기능 - 오답이면 자동 저장
+let currentQuizAnswer = "";
+
+function startQuiz() {
+    if (typeof concepts === "undefined" || concepts.length === 0) {
+        alert("⚠️ 개념 데이터가 없습니다.");
+        return;
+    }
+
+    const randomConcept = concepts[Math.floor(Math.random() * concepts.length)];
+    currentQuizAnswer = randomConcept.title;
+
+    document.getElementById("quizQuestion").textContent = `다음 개념의 정의는 무엇인가요?\n"${randomConcept.description}"`;
+    document.getElementById("quizAnswer").value = "";
+
+    let quizModal = new bootstrap.Modal(document.getElementById("quizModal"));
+    quizModal.show();
+}
+
+// ✅ 정답 확인 기능
+function checkQuizAnswer() {
+    const userAnswer = document.getElementById("quizAnswer").value.trim().toLowerCase();
+    
+    if (!userAnswer) {
+        alert("❌ 정답을 입력하세요!");
+        return;
+    }
+
+    if (userAnswer === currentQuizAnswer.toLowerCase()) {
+        alert("✅ 정답입니다!");
+    } else {
+        alert(`❌ 오답입니다! 정답: ${currentQuizAnswer}`);
+        saveWeakConcept(currentQuizAnswer);
+    }
+}
+
+// 📌 약한 개념 저장
+let weakConcepts = JSON.parse(localStorage.getItem("weakConcepts")) || [];
+
+function saveWeakConcept(title) {
+    if (!weakConcepts.includes(title)) {
+        weakConcepts.push(title);
+        localStorage.setItem("weakConcepts", JSON.stringify(weakConcepts));
+    }
+}
+
+function loadWeakConcepts() {
+    weakConcepts = JSON.parse(localStorage.getItem("weakConcepts")) || [];
+}
+
+// 📌 복습할 개념 저장
+let reviewConcepts = JSON.parse(localStorage.getItem("reviewConcepts")) || [];
+
+function toggleReview(title) {
+    if (!reviewConcepts.includes(title)) {
+        reviewConcepts.push(title);
+    } else {
+        reviewConcepts = reviewConcepts.filter(c => c !== title);
+    }
+    localStorage.setItem("reviewConcepts", JSON.stringify(reviewConcepts));
+    displayConcepts(concepts, "review"); 
+}
+
+function loadReviewConcepts() {
+    reviewConcepts = JSON.parse(localStorage.getItem("reviewConcepts")) || [];
+}
+
+// 📌 학습 완료 체크박스 기능 추가
+let completedConcepts = JSON.parse(localStorage.getItem("completed")) || [];
+
+function markAsRead(title) {
+    if (!completedConcepts.includes(title)) {
+        completedConcepts.push(title);
+    } else {
+        completedConcepts = completedConcepts.filter(c => c !== title);
+    }
+    localStorage.setItem("completed", JSON.stringify(completedConcepts));
+    displayConcepts(concepts, currentFilter);
+}
+
+function loadCompletedConcepts() {
+    completedConcepts = JSON.parse(localStorage.getItem("completed")) || [];
+}
