@@ -21,6 +21,7 @@ function displayConcepts(conceptList) {
         card.innerHTML = `
             <div class="card border-0 shadow-sm rounded-4 h-100">
                 <div class="card-body p-4">
+                    <span class="badge bg-info mb-2">${concept.category || "기타"}</span>
                     <h5 class="card-title fw-bold text-primary">${concept.title}</h5>
                     <p class="card-text text-muted">${concept.description}</p>
                 </div>

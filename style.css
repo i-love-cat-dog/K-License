@@ -34,3 +34,9 @@ input#searchBox {
     font-size: 1rem;
     line-height: 1.5;
 }
+
+.badge {
+    font-size: 0.9rem;
+    padding: 5px 10px;
+    border-radius: 8px;
+}
