@@ -80,19 +80,39 @@ function searchConcepts() {
 }
 
 // 퀴즈 기능
+let currentQuizAnswer = "";
+
+// 퀴즈 시작 (모달 사용)
 function startQuiz() {
     if (typeof concepts === "undefined" || concepts.length === 0) {
         alert("⚠️ 개념 데이터가 없습니다.");
         return;
     }
-    const randomConcept = concepts[Math.floor(Math.random() * concepts.length)];
-    const questionText = `다음 개념의 정의는 무엇인가요?\n\"${randomConcept.description}\"`;
-    const userAnswer = prompt(questionText);
 
-    if (userAnswer && userAnswer.toLowerCase() === randomConcept.title.toLowerCase()) {
+    const randomConcept = concepts[Math.floor(Math.random() * concepts.length)];
+    currentQuizAnswer = randomConcept.title;
+
+    document.getElementById("quizQuestion").textContent = `다음 개념의 정의는 무엇인가요?\n"${randomConcept.description}"`;
+    document.getElementById("quizAnswer").value = "";
+
+    // 모달 열기
+    let quizModal = new bootstrap.Modal(document.getElementById("quizModal"));
+    quizModal.show();
+}
+
+// 정답 확인
+function checkQuizAnswer() {
+    const userAnswer = document.getElementById("quizAnswer").value.trim().toLowerCase();
+    
+    if (!userAnswer) {
+        alert("❌ 정답을 입력하세요!");
+        return;
+    }
+
+    if (userAnswer === currentQuizAnswer.toLowerCase()) {
         alert("✅ 정답입니다!");
     } else {
-        alert(`❌ 오답입니다! 정답: ${randomConcept.title}`);
+        alert(`❌ 오답입니다! 정답: ${currentQuizAnswer}`);
     }
 }
 
