@@ -1,17 +1,32 @@
-document.addEventListener("DOMContentLoaded", function () {
-    if (typeof concepts === "undefined") {
-        console.error("⚠️ concepts 변수가 정의되지 않았습니다. concepts.js를 확인하세요.");
-        alert("❌ 데이터 로드 실패: concepts.js 파일이 없거나 올바르게 로드되지 않았습니다.");
-        fetchConcepts(); // concepts.js가 없을 경우 동적으로 불러옴
-        return;
-    }
-    console.log("✅ JSON 데이터 로드 성공:", concepts);
+let concepts = []; // 개념 데이터를 저장할 배열
+let weakConcepts = JSON.parse(localStorage.getItem("weakConcepts")) || [];
+let reviewConcepts = JSON.parse(localStorage.getItem("reviewConcepts")) || [];
+let completedConcepts = JSON.parse(localStorage.getItem("completed")) || [];
 
-    loadWeakConcepts();
-    loadReviewConcepts();
-    loadCompletedConcepts();
-    displayConcepts(concepts, "all");
+// 📌 JSON 파일에서 개념 데이터 불러오기
+document.addEventListener("DOMContentLoaded", function () {
+    fetchConcepts(); // 개념 데이터 불러오기
 });
+
+// ✅ 개념 데이터 불러오는 함수
+function fetchConcepts() {
+    fetch("concepts.json")
+        .then(response => response.json())
+        .then(data => {
+            concepts = data;
+            console.log("✅ JSON 데이터 로드 성공:", concepts);
+            
+            // 필터 및 학습 데이터 로드 후 개념 목록 표시
+            loadWeakConcepts();
+            loadReviewConcepts();
+            loadCompletedConcepts();
+            displayConcepts(concepts, "all");
+        })
+        .catch(error => {
+            console.error("⚠️ JSON 데이터 로드 실패:", error);
+            alert("❌ 개념 데이터를 불러오는 데 실패했습니다. 다시 시도해주세요.");
+        });
+}
 
 // ✅ Enter 키로 검색 기능 실행
 function handleSearchEnter(event) {
@@ -77,7 +92,7 @@ function filterConcepts(filter) {
 let currentQuizAnswer = "";
 
 function startQuiz() {
-    if (typeof concepts === "undefined" || concepts.length === 0) {
+    if (concepts.length === 0) {
         alert("⚠️ 개념 데이터가 없습니다.");
         return;
     }
@@ -110,8 +125,6 @@ function checkQuizAnswer() {
 }
 
 // 📌 약한 개념 저장
-let weakConcepts = JSON.parse(localStorage.getItem("weakConcepts")) || [];
-
 function saveWeakConcept(title) {
     if (!weakConcepts.includes(title)) {
         weakConcepts.push(title);
@@ -124,8 +137,6 @@ function loadWeakConcepts() {
 }
 
 // 📌 복습할 개념 저장
-let reviewConcepts = JSON.parse(localStorage.getItem("reviewConcepts")) || [];
-
 function toggleReview(title) {
     if (!reviewConcepts.includes(title)) {
         reviewConcepts.push(title);
@@ -141,8 +152,6 @@ function loadReviewConcepts() {
 }
 
 // 📌 학습 완료 체크박스 기능 추가
-let completedConcepts = JSON.parse(localStorage.getItem("completed")) || [];
-
 function markAsRead(title) {
     if (!completedConcepts.includes(title)) {
         completedConcepts.push(title);
@@ -150,7 +159,7 @@ function markAsRead(title) {
         completedConcepts = completedConcepts.filter(c => c !== title);
     }
     localStorage.setItem("completed", JSON.stringify(completedConcepts));
-    displayConcepts(concepts, currentFilter);
+    displayConcepts(concepts, "all");
 }
 
 function loadCompletedConcepts() {
