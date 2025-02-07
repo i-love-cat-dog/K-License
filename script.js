@@ -42,7 +42,7 @@ function handleQuizEnter(event) {
     }
 }
 
-// ✅ 개념 목록을 카드 형태로 표시하는 함수 (필터링 기능 추가)
+// ✅ 개념 목록을 카드 형태로 표시하는 함수 (✅ 이모티콘 추가)
 function displayConcepts(conceptList, filter = "all") {
     const conceptsList = document.getElementById("concepts-list");
     conceptsList.innerHTML = "";
@@ -66,15 +66,19 @@ function displayConcepts(conceptList, filter = "all") {
         card.dataset.title = concept.title;
 
         card.innerHTML = `
-            <div class="card border-0 shadow-sm rounded-4 h-100 ${isCompleted ? "text-muted" : ""}">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
                 <div class="card-body p-4">
                     <span class="badge bg-info mb-2">${concept.category || "기타"}</span>
-                    <h5 class="card-title fw-bold text-primary">${concept.title}</h5>
+                    <h5 class="card-title fw-bold text-primary">
+                        ${concept.title} <span id="emoji-${concept.title}">${isCompleted ? "✅" : ""}</span>
+                    </h5>
                     <p class="card-text text-muted">${concept.description}</p>
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between align-items-center">
                         <button class="btn btn-outline-primary btn-sm" onclick="toggleReview('${concept.title}')">🔄 복습 추가</button>
-                        <input type="checkbox" class="form-check-input" id="check-${concept.title}" ${isCompleted ? "checked" : ""} onchange="markAsRead('${concept.title}')">
-                        <label for="check-${concept.title}">✅ 학습 완료</label>
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="check-${concept.title}" ${isCompleted ? "checked" : ""} onchange="markAsRead('${concept.title}')">
+                            <label for="check-${concept.title}" class="form-check-label">✅ 학습 완료</label>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -151,17 +155,37 @@ function loadReviewConcepts() {
     reviewConcepts = JSON.parse(localStorage.getItem("reviewConcepts")) || [];
 }
 
-// 📌 학습 완료 체크박스 기능 추가
+// 📌 학습 완료 체크박스 기능 추가 (✅ 이모티콘 추가 및 제거)
 function markAsRead(title) {
+    const emojiSpan = document.getElementById(`emoji-${title}`);
+    
     if (!completedConcepts.includes(title)) {
         completedConcepts.push(title);
+        emojiSpan.textContent = "✅";
     } else {
         completedConcepts = completedConcepts.filter(c => c !== title);
+        emojiSpan.textContent = "";
     }
     localStorage.setItem("completed", JSON.stringify(completedConcepts));
-    displayConcepts(concepts, "all");
 }
 
+// 📌 학습 기록 불러오기
 function loadCompletedConcepts() {
     completedConcepts = JSON.parse(localStorage.getItem("completed")) || [];
+}
+
+// 🔄 초기화 버튼: 저장된 데이터를 모두 삭제
+function resetProgress() {
+    if (confirm("⚠️ 모든 학습 기록을 초기화하시겠습니까?")) {
+        localStorage.removeItem("weakConcepts");
+        localStorage.removeItem("reviewConcepts");
+        localStorage.removeItem("completed");
+        
+        weakConcepts = [];
+        reviewConcepts = [];
+        completedConcepts = [];
+
+        displayConcepts(concepts, "all"); // 전체 개념 목록 다시 표시
+        alert("✅ 학습 기록이 초기화되었습니다!");
+    }
 }
