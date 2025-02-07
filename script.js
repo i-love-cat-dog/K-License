@@ -8,15 +8,13 @@ document.addEventListener("DOMContentLoaded", function () {
     fetchConcepts();
 });
 
-// ✅ 개념 데이터 불러오는 함수
+// ✅ JSON 파일에서 개념 데이터 불러오는 함수
 function fetchConcepts() {
     fetch("concepts.json")
         .then(response => response.json())
         .then(data => {
             concepts = data;
             console.log("✅ JSON 데이터 로드 성공:", concepts);
-
-            // 필터 및 학습 데이터 로드 후 개념 목록 표시
             displayConcepts(concepts, "all");
         })
         .catch(error => {
@@ -27,8 +25,10 @@ function fetchConcepts() {
 
 // ✅ 개념 목록을 카드 형태로 표시하는 함수 (✅ 이모티콘 추가)
 function displayConcepts(conceptList, filter = "all") {
+    console.log(`📌 displayConcepts 실행됨 (필터: ${filter})`);
+
     const conceptsList = document.getElementById("concepts-list");
-    conceptsList.innerHTML = "";
+    conceptsList.innerHTML = ""; // 기존 목록 초기화 (중복 방지)
 
     let filteredConcepts = conceptList;
     if (filter === "weak") {
@@ -68,6 +68,66 @@ function displayConcepts(conceptList, filter = "all") {
         `;
         conceptsList.appendChild(card);
     });
+}
+
+// ✅ 필터링 기능 (중복 실행 방지)
+function filterConcepts(filter) {
+    console.log(`📌 filterConcepts 실행됨 (필터: ${filter})`);
+    displayConcepts(concepts, filter);
+}
+
+// ✅ 검색 기능 (중복 실행 방지)
+function searchConcepts() {
+    const searchTerm = document.getElementById("searchBox").value.toLowerCase();
+    console.log(`📌 searchConcepts 실행됨 (검색어: ${searchTerm})`);
+
+    if (!searchTerm) {
+        displayConcepts(concepts, "all");
+        return;
+    }
+
+    const filteredConcepts = concepts.filter(concept => 
+        concept.title.toLowerCase().includes(searchTerm) || 
+        concept.description.toLowerCase().includes(searchTerm)
+    );
+
+    displayConcepts(filteredConcepts, "all");
+}
+
+// 📌 퀴즈 기능 - 오답이면 자동 저장
+let currentQuizAnswer = "";
+
+function startQuiz() {
+    if (concepts.length === 0) {
+        alert("⚠️ 개념 데이터가 없습니다.");
+        return;
+    }
+
+    const randomConcept = concepts[Math.floor(Math.random() * concepts.length)];
+    currentQuizAnswer = randomConcept.title;
+
+    document.getElementById("quizQuestion").textContent = `다음 개념의 정의는 무엇인가요?\n"${randomConcept.description}"`;
+    document.getElementById("quizAnswer").value = "";
+
+    let quizModal = new bootstrap.Modal(document.getElementById("quizModal"));
+    quizModal.show();
+}
+
+// ✅ 정답 확인 기능
+function checkQuizAnswer() {
+    const userAnswer = document.getElementById("quizAnswer").value.trim().toLowerCase();
+    
+    if (!userAnswer) {
+        alert("❌ 정답을 입력하세요!");
+        return;
+    }
+
+    if (userAnswer === currentQuizAnswer.toLowerCase()) {
+        alert("✅ 정답입니다!");
+    } else {
+        alert(`❌ 오답입니다! 정답: ${currentQuizAnswer}`);
+        saveWeakConcept(currentQuizAnswer);
+    }
 }
 
 // ✅ 학습 완료 체크박스 기능 수정 (✅ 이모티콘 추가 및 중복 방지)
