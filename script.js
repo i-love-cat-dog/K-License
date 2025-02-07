@@ -1,131 +1,75 @@
-document.addEventListener("DOMContentLoaded", function () {
-    if (typeof concepts === "undefined") {
-        console.error("⚠️ concepts 변수가 정의되지 않았습니다. concepts.js를 확인하세요.");
-        alert("❌ 데이터 로드 실패: concepts.js 파일이 없거나 올바르게 로드되지 않았습니다.");
-        fetchConcepts();
-        return;
-    }
-    console.log("✅ JSON 데이터 로드 성공:", concepts);
-    displayConcepts(concepts);
-    loadWeakConcepts(); // 자주 틀리는 개념 불러오기
-    loadReviewConcepts(); // 복습해야 할 개념 불러오기
-});
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>정보처리기사 개념 정리</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 네비게이션 바 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">📚 정보처리기사 개념</a>
+        </div>
+    </nav>
 
-// 🔄 동적으로 concepts.js 불러오기 (필요 시)
-function fetchConcepts() {
-    fetch("concepts.js")
-        .then((response) => {
-            if (!response.ok) throw new Error("concepts.js를 찾을 수 없습니다.");
-            return response.text();
-        })
-        .then((data) => {
-            eval(data);
-            if (typeof concepts !== "undefined") {
-                console.log("✅ 동적 로드 성공:", concepts);
-                displayConcepts(concepts);
-            } else {
-                throw new Error("concepts 변수가 여전히 정의되지 않음");
-            }
-        })
-        .catch((error) => {
-            console.error("❌ concepts.js 로드 실패:", error);
-            alert("❌ 개념 데이터를 불러오지 못했습니다. 관리자에게 문의하세요.");
-        });
-}
+    <!-- 검색 & 필터 섹션 -->
+    <div class="container mt-5 text-center">
+        <h1 class="fw-bold text-dark-emphasis">필기 개념 정리</h1>
+        <p class="text-muted">필기 시험 대비를 위한 핵심 개념을 정리해보세요.</p>
 
-// 개념 목록을 카드 형태로 표시하는 함수
-function displayConcepts(conceptList) {
-    const conceptsList = document.getElementById("concepts-list");
-    conceptsList.innerHTML = "";
+        <!-- 검색창 -->
+        <div class="d-flex justify-content-center mt-4">
+            <input type="text" id="searchBox" class="form-control form-control-lg w-50"
+                   placeholder="검색어를 입력하세요..." onkeypress="handleSearchEnter(event)">
+            <button class="btn btn-primary btn-lg ms-3 px-4 rounded-pill" onclick="searchConcepts()">🔍 검색</button>
+        </div>
 
-    if (conceptList.length === 0) {
-        conceptsList.innerHTML = `<p class="text-center text-danger">검색 결과가 없습니다.</p>`;
-        return;
-    }
+        <!-- 필터 버튼 -->
+        <div class="btn-group mt-3" role="group">
+            <button class="btn btn-outline-secondary" onclick="displayConcepts(concepts, 'all')">📖 전체 보기</button>
+            <button class="btn btn-outline-warning" onclick="displayConcepts(concepts, 'weak')">⚠️ 약한 개념</button>
+            <button class="btn btn-outline-info" onclick="displayConcepts(concepts, 'review')">🔄 복습 개념</button>
+        </div>
 
-    conceptList.forEach((concept) => {
-        const card = document.createElement("div");
-        card.classList.add("col");
-        card.dataset.title = concept.title;
+        <!-- 퀴즈 시작 버튼 -->
+        <div class="mt-4">
+            <button class="btn btn-warning btn-lg rounded-pill" onclick="startQuiz()">🧠 퀴즈 시작!</button>
+        </div>
+    </div>
 
-        card.innerHTML = `
-            <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-body p-4">
-                    <span class="badge bg-info mb-2">${concept.category || "기타"}</span>
-                    <h5 class="card-title fw-bold text-primary">${concept.title}</h5>
-                    <p class="card-text text-muted">${concept.description}</p>
-                    <button class="btn btn-outline-warning btn-sm" onclick="toggleReview('${concept.title}')">🔄 다시 복습</button>
+    <!-- 개념 카드 리스트 -->
+    <div class="container mt-5">
+        <div id="concepts-list" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            <!-- 개념 카드가 여기에 추가됨 -->
+        </div>
+    </div>
+
+    <!-- 퀴즈 모달 -->
+    <div class="modal fade" id="quizModal" tabindex="-1" aria-labelledby="quizModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="quizModalLabel">🧠 퀴즈 문제</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="quizQuestion"></p>
+                    <input type="text" id="quizAnswer" class="form-control" placeholder="정답을 입력하세요"
+                           onkeypress="handleQuizEnter(event)">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" onclick="checkQuizAnswer()">✅ 정답 확인</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
                 </div>
             </div>
-        `;
-        conceptsList.appendChild(card);
-    });
-}
+        </div>
+    </div>
 
-// "다시 복습해야 할 개념" 체크 기능
-function toggleReview(title) {
-    let reviewConcepts = JSON.parse(localStorage.getItem("reviewConcepts")) || [];
-    if (reviewConcepts.includes(title)) {
-        reviewConcepts = reviewConcepts.filter(item => item !== title);
-    } else {
-        reviewConcepts.push(title);
-    }
-    localStorage.setItem("reviewConcepts", JSON.stringify(reviewConcepts));
-    alert(`"${title}" ${reviewConcepts.includes(title) ? "다시 복습 목록에 추가됨" : "다시 복습 목록에서 제거됨"}`);
-}
-
-// 자주 틀리는 개념 저장 (퀴즈에서 오답일 경우 자동 저장)
-function saveWeakConcept(title) {
-    let weakConcepts = JSON.parse(localStorage.getItem("weakConcepts")) || [];
-    if (!weakConcepts.includes(title)) {
-        weakConcepts.push(title);
-        localStorage.setItem("weakConcepts", JSON.stringify(weakConcepts));
-    }
-}
-
-// 퀴즈 기능 (오답일 경우 자동 저장)
-let currentQuizAnswer = "";
-function startQuiz() {
-    if (typeof concepts === "undefined" || concepts.length === 0) {
-        alert("⚠️ 개념 데이터가 없습니다.");
-        return;
-    }
-
-    const randomConcept = concepts[Math.floor(Math.random() * concepts.length)];
-    currentQuizAnswer = randomConcept.title;
-
-    document.getElementById("quizQuestion").textContent = `다음 개념의 정의는 무엇인가요?
-"${randomConcept.description}"`;
-    document.getElementById("quizAnswer").value = "";
-
-    let quizModal = new bootstrap.Modal(document.getElementById("quizModal"));
-    quizModal.show();
-}
-
-function checkQuizAnswer() {
-    const userAnswer = document.getElementById("quizAnswer").value.trim().toLowerCase();
-    
-    if (!userAnswer) {
-        alert("❌ 정답을 입력하세요!");
-        return;
-    }
-
-    if (userAnswer === currentQuizAnswer.toLowerCase()) {
-        alert("✅ 정답입니다!");
-    } else {
-        alert(`❌ 오답입니다! 정답: ${currentQuizAnswer}`);
-        saveWeakConcept(currentQuizAnswer); // 오답이면 자동 저장
-    }
-}
-
-// 자주 틀리는 개념 불러오기
-function loadWeakConcepts() {
-    const weakConcepts = JSON.parse(localStorage.getItem("weakConcepts")) || [];
-    console.log("⚠️ 자주 틀리는 개념:", weakConcepts);
-}
-
-// 복습해야 할 개념 불러오기
-function loadReviewConcepts() {
-    const reviewConcepts = JSON.parse(localStorage.getItem("reviewConcepts")) || [];
-    console.log("🔄 다시 복습해야 할 개념:", reviewConcepts);
-}
+    <script src="concepts.js"></script>
+    <script src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
